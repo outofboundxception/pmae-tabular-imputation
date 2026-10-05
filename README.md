@@ -1,146 +1,135 @@
-# Proportionally Masked Autoencoders for Tabular Data Imputation
+# PMAE: Tabular Data Imputation
 
-An implementation and experimental evaluation of **Proportionally Masked Autoencoders (PMAE)** for missing-value imputation in tabular data.
+An implementation of **Proportionally Masked Autoencoders (PMAE)** for tabular data imputation, with **ReMasker** used as a baseline.
 
-This project is based on the AAAI 2025 paper:
+> **Project Title:** An Implementation of Proportionally Masked Autoencoders for Tabular Data Imputation
 
-> J. Kim, K. Lee, and T. Park, “To Predict or Not to Predict? Proportionally Masked Autoencoders for Tabular Data Imputation,” *Proceedings of the Thirty-Ninth AAAI Conference on Artificial Intelligence (AAAI-25)*, 2025.
+This project is based on:
 
-**Paper:** https://ojs.aaai.org/index.php/AAAI/article/view/33967
+**J. Kim, K. Lee, and T. Park, "To Predict or Not to Predict? Proportionally Masked Autoencoders for Tabular Data Imputation," AAAI-25, 2025.**
+
+- Paper: https://ojs.aaai.org/index.php/AAAI/article/view/33967
+- DOI: https://doi.org/10.1609/aaai.v39i17.33967
 
 ---
 
 ## Overview
 
-Missing values are common in real-world tabular datasets. Traditional approaches such as mean/median imputation or row deletion can lose useful relationships in the data.
+Missing values are common in real-world tabular datasets. Simple approaches such as mean/median imputation or deleting incomplete rows may lose important relationships between features.
 
-PMAE treats imputation as a **masked reconstruction problem**. Its main idea is to make the additional masking strategy depend on the amount of data already observed in each feature.
+PMAE formulates tabular imputation as a **masked reconstruction problem**. Its main idea is to make the additional masking strategy depend on the amount of data already observed in each feature.
 
-For a feature \(j\), the implementation first computes its observed proportion:
+For feature \(j\), the observed proportion is:
 
 \[
 p_{\mathrm{obs},j}
 \]
 
-and then uses the logit-based masking function from the paper:
+The proportional masking function used in the implementation is:
 
 \[
 M_j(p_{\mathrm{obs},j})
 =
-0.05\log\left(\frac{p_{\mathrm{obs},j}}
-{1-p_{\mathrm{obs},j}}\right)+0.5
+0.05
+\log
+\left(
+\frac{p_{\mathrm{obs},j}}
+{1-p_{\mathrm{obs},j}}
+\right)
++0.5
 \]
 
-The resulting masking ratio is feature-dependent rather than a single global value.
+Therefore, different features receive different additional masking ratios according to their observed proportions.
 
-This repository also includes a **ReMasker baseline** for comparison.
+This repository implements the PMAE workflow and compares it with a ReMasker baseline.
 
 ---
 
-## Project Status
+## Current Experiment
 
-### Current completed experiment
+The final reported experiment uses:
 
-The final implementation currently evaluates:
+| Parameter | Value |
+|---|---|
+| Dataset | Diabetes |
+| Original samples | 442 |
+| Features | 10 |
+| Numerical features | 9 |
+| Categorical features | 1 |
+| Missingness pattern | `full` |
+| Seed | `2` |
+| Training device | CPU |
+| Training epochs | 300 |
+| PMAE architecture | MLP-Mixer |
+| Baseline | ReMasker |
 
-- **Dataset:** Diabetes
-- **Missingness pattern:** `full`
-- **Seed:** `2`
-- **PMAE architecture:** MLP-Mixer
-- **Training device:** CPU
-- **Training epochs:** 300
-- **Baseline:** ReMasker
-
-The current experiment is intended as an **implementation validation on one dataset**, not as a complete reproduction of every experiment in the original paper.
-
-### Additional datasets
-
-The repository also contains the following datasets for future/extended experiments:
-
-1. Adult
-2. Bike Sharing
-3. Default of Credit Card Clients
-4. Estimation of Obesity Levels Based on Eating Habits and Physical Condition
-5. Letter Recognition
-6. Online News Popularity
-7. Online Shoppers Purchasing Intention
-8. Wine Quality
-
-These datasets are collected in the `datasets/` directory. The current final notebook is configured for the Diabetes experiment.
+The current experiment is an **implementation validation on one dataset**. It is not intended to claim a complete reproduction of all experiments from the original PMAE paper.
 
 ---
 
 ## Repository Structure
 
+The repository is intentionally kept flat so that the implementation files are directly available from the repository root.
+
 ```text
-PMAE-main/
+PMAE/
 │
-├── datasets/
-│   ├── adult/
-│   ├── bike+sharing+dataset/
-│   ├── default+of+credit+card+clients/
-│   ├── estimation+of+obesity+levels+based+on+eating+habits+and+physical+condition/
-│   ├── letter+recognition/
-│   ├── online+news+popularity/
-│   ├── online+shoppers+purchasing+intention+dataset/
-│   └── wine+quality/
+├── amputation/
+│   └── diabetes/
+│       ├── amputed.pkl
+│       └── new_proc.pkl
 │
-└── PMAE-main/
-    ├── amputation/
-    │   ├── diabetes/
-    │   │   ├── amputed.pkl
-    │   │   └── new_proc.pkl
-    │   ├── ampute_dataset.ipynb
-    │   ├── miss_mech.py
-    │   └── miss_mech_rem.py
-    │
-    ├── blocks.py
-    ├── configs.py
-    ├── evaluate.py
-    ├── fit_pMAE.py
-    ├── fit_ReMasker.py
-    ├── miss_mech.py
-    ├── model_mae.py
-    ├── pMAE.py
-    ├── utils.py
-    ├── requirements.txt
-    ├── README.md
-    └── [supplementary] Run PMAE.ipynb
+├── pMAE.py
+├── blocks.py
+├── model_mae.py
+├── fit_pMAE.py
+├── fit_ReMasker.py
+├── evaluate.py
+├── configs.py
+├── miss_mech.py
+├── utils.py
+├── requirements.txt
+├── README.md
+└── [supplementary] Run PMAE.ipynb
 ```
+
+### Important files
+
+| File | Purpose |
+|---|---|
+| `pMAE.py` | PMAE model and proportional masking implementation |
+| `blocks.py` | Encoder/decoder building blocks |
+| `model_mae.py` | Masked autoencoder components |
+| `fit_pMAE.py` | PMAE training and imputation |
+| `fit_ReMasker.py` | ReMasker baseline training and imputation |
+| `evaluate.py` | Imputation evaluation metrics |
+| `configs.py` | Model/configuration settings |
+| `miss_mech.py` | Missingness generation utilities |
+| `utils.py` | Supporting utilities |
+| `[supplementary] Run PMAE.ipynb` | Main experiment notebook |
 
 ---
 
 # Installation
 
-## 1. Clone the repository
+## Requirements
 
-```bash
-git clone <YOUR-GITHUB-REPOSITORY-URL>
-cd PMAE-main
-```
+The implementation was developed using:
 
-The repository contains a nested `PMAE-main` directory. Enter the directory containing `pMAE.py`, `fit_pMAE.py`, `configs.py`, and `requirements.txt`:
+- Python 3.9
+- PyTorch 2.2.1
+- NumPy 1.26.4
+- Pandas 2.2.1
+- SciPy 1.12.0
+- Scikit-learn 1.4.1.post1
+- einops 0.8.0
+- timm 0.9.16
 
-```bash
-cd PMAE-main
-```
-
-You should now see files such as:
-
-```text
-pMAE.py
-fit_pMAE.py
-fit_ReMasker.py
-configs.py
-evaluate.py
-requirements.txt
-```
+A GPU is **not required** for the current reported experiment because the final implementation uses CPU execution.
 
 ---
 
-## 2. Create the Conda environment
-
-The implementation was developed with **Python 3.9** and **PyTorch 2.2.1**.
+## 1. Create the Conda environment
 
 ```bash
 conda create -n PMAE python=3.9 -y
@@ -152,7 +141,7 @@ Activate it:
 conda activate PMAE
 ```
 
-Verify:
+Check the Python version:
 
 ```bash
 python --version
@@ -166,43 +155,26 @@ Python 3.9.x
 
 ---
 
-## 3. Install dependencies
+## 2. Install dependencies
 
-Upgrade pip:
+From the repository root:
 
 ```bash
 python -m pip install --upgrade pip
-```
-
-Install the project requirements:
-
-```bash
 pip install -r requirements.txt
-```
-
-The repository pins the following core versions:
-
-```text
-torch==2.2.1
-numpy==1.26.4
-pandas==2.2.1
-scipy==1.12.0
-scikit-learn==1.4.1.post1
-einops==0.8.0
-timm==0.9.16
 ```
 
 ---
 
-## 4. Install Jupyter
+## 3. Install Jupyter
 
-The main experiment is provided as a Jupyter notebook.
+The experiment is provided as a Jupyter notebook.
 
 ```bash
 pip install jupyter notebook ipykernel
 ```
 
-Register the environment as a Jupyter kernel:
+Register the environment:
 
 ```bash
 python -m ipykernel install --user --name PMAE --display-name "Python 3.9 (PMAE)"
@@ -210,11 +182,11 @@ python -m ipykernel install --user --name PMAE --display-name "Python 3.9 (PMAE)
 
 ---
 
-# Running the Current Experiment
+# Running the Experiment
 
-## 1. Start Jupyter
+## Using Jupyter Notebook
 
-From the inner `PMAE-main` directory:
+From the repository root:
 
 ```bash
 jupyter notebook
@@ -236,192 +208,14 @@ Then run the notebook from top to bottom.
 
 ---
 
-## 2. Current experiment configuration
+## Using VS Code
 
-The final notebook is configured approximately as follows:
+Install the following VS Code extensions:
 
-```python
-basedir = './'
-dset = 'diabetes'
+- Python
+- Jupyter
 
-missing_pattern = 'full'
-seed = 2
-```
-
-The experiment loads the prepared Diabetes files:
-
-```text
-amputation/diabetes/new_proc.pkl
-amputation/diabetes/amputed.pkl
-```
-
-These files contain the processed data and generated missingness configuration used by the current experiment.
-
----
-
-# PMAE Configuration
-
-The final experiment uses:
-
-```python
-model_pmae = ProportionalMasker(args)
-
-model_pmae.batch_size = batch_size
-model_pmae.device = 'cpu'
-model_pmae.max_epochs = 300
-
-model_pmae.old_loss = False
-model_pmae.block_mlp = 0
-model_pmae.new_imp = True
-```
-
-In this implementation:
-
-- `block_mlp = 0` selects the **MLP-Mixer** architecture.
-- `old_loss = False` enables the newer PMAE loss formulation.
-- `new_imp = True` enables the current imputation path.
-- Training is performed on CPU.
-- The experiment runs for 300 epochs.
-
-The shared model configuration uses:
-
-```text
-Embedding dimension: 32
-Encoder depth:       6
-Decoder depth:       4
-Number of heads:     4
-MLP ratio:           4
-Weight decay:        0.05
-Base learning rate:  1e-3
-Warmup epochs:       40
-```
-
----
-
-# ReMasker Baseline
-
-The same notebook also trains the ReMasker baseline:
-
-```python
-model_remasker = ReMasker(args)
-
-model_remasker.batch_size = batch_size
-model_remasker.device = 'cpu'
-model_remasker.max_epochs = 300
-
-model_remasker.new_imp = False
-```
-
-This allows PMAE and ReMasker to be evaluated on the same incomplete dataset.
-
----
-
-# Evaluation
-
-The notebook evaluates the imputed data against the retained ground-truth values.
-
-The current evaluator reports:
-
-- **Imputation Accuracy**
-- **Numerical \(R^2\)**
-- **Categorical Accuracy**
-- **Wasserstein Distance**
-- **RMSE**
-- **Numerical RMSE**
-- **Categorical RMSE**
-
-The evaluation is performed using the missing-value mask so that the imputation performance is measured at the relevant missing positions.
-
----
-
-# Current Results
-
-The current final Diabetes experiment produced the following results:
-
-| Metric | PMAE | ReMasker |
-|---|---:|---:|
-| Imputation Accuracy | **0.2762** | 0.1274 |
-| Numerical \(R^2\) | **0.2057** | 0.0383 |
-| Categorical Accuracy | 0.8400 | 0.8400 |
-| Wasserstein Distance | 0.1513 | **0.1478** |
-| RMSE | **0.2037** | 0.2040 |
-| Numerical RMSE | 0.1976 | **0.1973** |
-| Categorical RMSE | **0.4040** | 0.4193 |
-
-### Interpretation
-
-In this experiment, PMAE achieved substantially higher:
-
-- Imputation Accuracy
-- Numerical \(R^2\)
-
-Both methods achieved the same categorical accuracy.
-
-ReMasker had slightly better:
-
-- Wasserstein Distance
-- Numerical RMSE
-
-Therefore, the results indicate that PMAE performs strongly on this particular Diabetes experiment, but they **should not be interpreted as universal superiority** because the current experiment uses one dataset, one missingness configuration, and one seed.
-
----
-
-# Training
-
-Both models are trained for:
-
-```text
-300 epochs
-```
-
-The final notebook reports approximately:
-
-```text
-PMAE:
-Loss at epoch 280 = 0.16527673998864403
-
-ReMasker:
-Loss at epoch 280 = 0.16938155073060407
-```
-
-The ReMasker run also produced a non-finite loss message during training; the implementation continued after the invalid update.
-
----
-
-# Running the Notebook Non-Interactively
-
-The notebook can also be executed from the command line.
-
-```bash
-jupyter nbconvert --to notebook --execute "[supplementary] Run PMAE.ipynb" --output executed_PMAE.ipynb
-```
-
-To export the executed notebook to HTML:
-
-```bash
-jupyter nbconvert --to html executed_PMAE.ipynb
-```
-
-This produces:
-
-```text
-executed_PMAE.html
-```
-
----
-
-# Using VS Code
-
-VS Code can also be used to run the project.
-
-Install:
-
-- Python extension
-- Jupyter extension
-
-Open the **inner `PMAE-main` directory** in VS Code.
-
-Open:
+Open the repository folder in VS Code and open:
 
 ```text
 [supplementary] Run PMAE.ipynb
@@ -437,39 +231,254 @@ as the notebook kernel and run the cells.
 
 ---
 
-# CPU / GPU
+# Current Experiment Configuration
 
-The final project configuration explicitly uses:
+The final notebook uses the Diabetes experiment with:
 
 ```python
-model_pmae.device = 'cpu'
-model_remasker.device = 'cpu'
+dset = 'diabetes'
+missing_pattern = 'full'
+seed = 2
 ```
 
-Therefore, a CUDA-capable GPU is **not required for the current experiment**.
+The prepared experiment files are located at:
 
-A GPU may be useful for larger datasets or extended experiments, but GPU-specific execution has not been used for the final reported experiment.
+```text
+amputation/diabetes/
+├── amputed.pkl
+└── new_proc.pkl
+```
+
+These files allow the current experiment to be reproduced without regenerating the missingness configuration.
 
 ---
 
-# Extending to Other Datasets
+# PMAE Configuration
 
-The repository contains additional datasets that can be used for future experiments.
+The final PMAE experiment uses:
 
-The next stage of the project is to extend the pipeline to:
+```python
+model_pmae = ProportionalMasker(args)
 
-```text
-Adult
-Bike Sharing
-Default of Credit Card Clients
-Obesity
-Letter Recognition
-Online News Popularity
-Online Shoppers Purchasing Intention
-Wine Quality
+model_pmae.batch_size = 128
+model_pmae.device = 'cpu'
+model_pmae.max_epochs = 300
+
+model_pmae.old_loss = False
+model_pmae.block_mlp = 0
+model_pmae.new_imp = True
 ```
 
-For a complete experimental study, future work should evaluate:
+The model configuration includes:
+
+```text
+Embedding dimension: 32
+Encoder depth:       6
+Decoder depth:       4
+Number of heads:     4
+MLP ratio:           4
+Base learning rate:  0.001
+Weight decay:        0.05
+Warmup epochs:       40
+```
+
+### MLP-Mixer
+
+In the implementation:
+
+```python
+block_mlp = 0
+```
+
+selects the **MLP-Mixer** architecture rather than the attention-based Transformer block.
+
+This is consistent with the PMAE paper's investigation of MLP-Mixer based token mixing for tabular data.
+
+---
+
+# ReMasker Baseline
+
+ReMasker is trained separately using:
+
+```python
+model_remasker = ReMasker(args)
+
+model_remasker.batch_size = 128
+model_remasker.device = 'cpu'
+model_remasker.max_epochs = 300
+
+model_remasker.new_imp = False
+```
+
+The same incomplete Diabetes data is used for the comparison.
+
+---
+
+# Implementation Pipeline
+
+The complete workflow is:
+
+```text
+Complete Diabetes Dataset
+          │
+          ▼
+Generate / Load Missingness
+          │
+          ▼
+Incomplete Dataset + Missingness Mask
+          │
+          ├───────────────┐
+          ▼               ▼
+        PMAE          ReMasker
+          │               │
+          ▼               ▼
+     Imputed Data     Imputed Data
+          │               │
+          └───────┬───────┘
+                  ▼
+              Evaluator
+                  │
+                  ▼
+             Comparison
+```
+
+The complete ground-truth data is retained only for evaluation. The models perform imputation using the incomplete input.
+
+---
+
+# Evaluation Metrics
+
+The implementation evaluates:
+
+- **Imputation Accuracy**
+- **Numerical \(R^2\)**
+- **Categorical Accuracy**
+- **Wasserstein Distance**
+- **RMSE**
+- **Numerical RMSE**
+- **Categorical RMSE**
+
+Higher is better for:
+
+- Imputation Accuracy
+- Numerical \(R^2\)
+- Categorical Accuracy
+
+Lower is better for:
+
+- Wasserstein Distance
+- RMSE
+
+---
+
+# Results
+
+The final Diabetes experiment produced:
+
+| Metric | PMAE | ReMasker |
+|---|---:|---:|
+| Imputation Accuracy | **0.2762** | 0.1274 |
+| Numerical \(R^2\) | **0.2057** | 0.0383 |
+| Categorical Accuracy | 0.8400 | 0.8400 |
+| Wasserstein Distance | 0.1513 | **0.1478** |
+| RMSE | **0.2037** | 0.2040 |
+| Numerical RMSE | 0.1976 | **0.1973** |
+| Categorical RMSE | **0.4040** | 0.4193 |
+
+### Interpretation
+
+For this experiment, PMAE achieves substantially better:
+
+- Imputation Accuracy
+- Numerical \(R^2\)
+
+Both methods achieve the same categorical accuracy.
+
+ReMasker performs slightly better on:
+
+- Wasserstein Distance
+- Numerical RMSE
+
+Therefore, the current results demonstrate promising performance for PMAE on the Diabetes experiment, but they should **not** be interpreted as proof of universal superiority. The current evaluation uses one dataset, one missingness configuration, and one seed.
+
+---
+
+# Training
+
+Both models are trained for:
+
+```text
+300 epochs
+```
+
+The final training output reported approximately:
+
+```text
+PMAE:
+Loss at epoch 280 ≈ 0.16528
+
+ReMasker:
+Loss at epoch 280 ≈ 0.16938
+```
+
+The ReMasker run also encountered a non-finite loss event during training. The implementation detects invalid losses and skips the corresponding update so that training can continue.
+
+---
+
+# Running the Notebook from the Command Line
+
+The notebook can also be executed without opening the Jupyter interface:
+
+```bash
+jupyter nbconvert --to notebook --execute "[supplementary] Run PMAE.ipynb" --output executed_PMAE.ipynb
+```
+
+To generate an HTML version:
+
+```bash
+jupyter nbconvert --to html executed_PMAE.ipynb
+```
+
+The resulting file will be:
+
+```text
+executed_PMAE.html
+```
+
+---
+
+# Reproducing the Reported Experiment
+
+To reproduce the experiment reported in the project:
+
+1. Install Python 3.9.
+2. Create the `PMAE` Conda environment.
+3. Install `requirements.txt`.
+4. Install Jupyter.
+5. Open the repository root.
+6. Open `[supplementary] Run PMAE.ipynb`.
+7. Select the `Python 3.9 (PMAE)` kernel.
+8. Use:
+   ```python
+   dset = 'diabetes'
+   missing_pattern = 'full'
+   seed = 2
+   ```
+9. Run the notebook from top to bottom.
+
+The required prepared Diabetes files are already included under:
+
+```text
+amputation/diabetes/
+```
+
+---
+
+# Future Work
+
+The current implementation is intentionally evaluated on one dataset.
+
+Future work will extend the experiment to additional tabular datasets and evaluate:
 
 - Multiple datasets
 - Multiple missingness patterns
@@ -478,41 +487,15 @@ For a complete experimental study, future work should evaluate:
 - PMAE-MLP vs PMAE-Transformer
 - ReMasker comparison
 - Runtime and memory usage
-- CPU vs GPU execution
+- CPU vs GPU performance
 
-The original PMAE paper evaluates a much broader benchmark; the current repository experiment is intentionally limited to the Diabetes dataset.
-
----
-
-# Reproducing the Reported Experiment
-
-To reproduce the current reported experiment as closely as possible:
-
-1. Create the `PMAE` Conda environment.
-2. Install `requirements.txt`.
-3. Install Jupyter.
-4. Enter the inner `PMAE-main` directory.
-5. Open `[supplementary] Run PMAE.ipynb`.
-6. Select the `Python 3.9 (PMAE)` kernel.
-7. Keep:
-   ```python
-   dset = 'diabetes'
-   missing_pattern = 'full'
-   seed = 2
-   ```
-8. Run the notebook from top to bottom.
-
-The prepared Diabetes files required for this experiment are already included in:
-
-```text
-amputation/diabetes/
-```
+The goal is to move from a single-dataset implementation study toward a broader empirical evaluation.
 
 ---
 
-# Citation
+# Reference
 
-If you use this implementation or the PMAE method in your work, please cite the original paper:
+If you use this implementation or build upon the PMAE method, please cite the original paper:
 
 ```bibtex
 @inproceedings{kim2025pmae,
@@ -529,7 +512,7 @@ If you use this implementation or the PMAE method in your work, please cite the 
 
 ---
 
-# Project Authors
+# Authors
 
 **Bhavya Prajapati**  
 Department of Computer Science  
@@ -547,10 +530,8 @@ Gandhinagar, India
 
 ## Acknowledgment
 
-This project is an implementation and study of the PMAE method proposed by Kim, Lee, and Park. Please refer to the original paper for the complete methodology, benchmark design, and reported state-of-the-art comparisons.
-
----
+This project is an implementation and study of the PMAE method proposed by Kim, Lee, and Park. Please refer to the original paper for the complete methodology, benchmark setup, and reported experimental results.
 
 ## License
 
-This repository contains an implementation based on the referenced research work. Before publishing the repository publicly, review the licensing terms of the original PMAE implementation and each included dataset, and add the appropriate license information here.
+Before publishing this repository publicly, verify the licensing terms of the original PMAE implementation and any data files included in the repository. Add the appropriate license information here once confirmed.
